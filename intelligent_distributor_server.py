@@ -56,21 +56,34 @@ async def analyze_video_endpoint(request: Request, video: UploadFile = File(...)
             shutil.copyfileobj(video.file, tmp_file)
             temp_file_path = tmp_file.name
 
-        # 1. get_function 是一个同步方法，返回一个工具对象
         video_analyzer_tool = builder.get_function("video_analyzer")
         print(f"直接获取函数对象: {video_analyzer_tool}")
 
-        # --- 这是最终的、正确的修正 ---
-        # 2. 将所有参数打包成一个字典，作为 ainvoke 的唯一输入
         input_args = {"video_file_path": temp_file_path}
-        result = await video_analyzer_tool.ainvoke(input_args)
-        print(f"收到工具的直接返回结果: {result}")
+        result_chunks = await video_analyzer_tool.ainvoke(input_args)
+        print(f"收到工具的直接返回结果 (分块): {result_chunks}")
+
+        # --- 这是最终的、正确的修正 ---
+        # 1. 检查返回的是否是列表
+        if not isinstance(result_chunks, list):
+             return {"raw_result": "Agent did not return a valid list."}
+
+        # 2. 拼接所有文本片段
+        full_raw_text = "".join(chunk.get("text", "") for chunk in result_chunks if isinstance(chunk, dict))
+        print(f"拼接后的完整文本: {full_raw_text}")
 
         try:
-            analysis_json = json.loads(result)
+            # 3. 对拼接后的完整文本进行清理和解析
+            if '```json' in full_raw_text:
+                cleaned_text = full_raw_text.split('```json\n', 1)[1].rsplit('\n```', 1)[0]
+            else:
+                cleaned_text = full_raw_text
+
+            analysis_json = json.loads(cleaned_text)
             return analysis_json
         except (json.JSONDecodeError, IndexError, TypeError):
-            return {"raw_result": result}
+            print(f"JSON解析失败, full_raw_text was: {full_raw_text}")
+            return {"raw_result": result_chunks}
 
     except Exception as e:
         import traceback

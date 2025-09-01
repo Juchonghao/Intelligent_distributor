@@ -20,20 +20,6 @@ uv pip install fastapi "uvicorn[standard]"
 
 ### 2\. 关键文件配置
 
-本项目由几个核心文件驱动，请确保它们已根据您的需求配置妥当：
-
-* **`intelligent_distributor/pyproject.toml`**:
-  此文件是项目的打包配置文件。最关键的部分是 `[project.entry-points."nat.components"]`，它必须正确指向您的工具注册文件，以便 `nat` 框架能自动发现您的自定义工具。
-
-* **`intelligent_distributor/src/intelligent_distributor/analyzer_tool.py`**:
-  这是AI分析工具的核心逻辑文件。它实现了调用通义千问API分析视频的功能。请确保其中所有 `import` 语句都指向了正确的模块路径（例如 `nat.data_models.function` 等）。
-
-* **`intelligent_distributor/src/intelligent_distributor/register.py`**:
-  此文件是工具的“注册入口”。它必须导入 `analyzer_tool.py`，以确保 `@register_function` 装饰器能够被执行。
-
-* **`intelligent_distributor/src/intelligent_distributor/configs/config.yml`**:
-  这是AI代理的工作流配置文件。请在此处定义您的 `video_analyzer` 工具，并授权 `react_agent` 使用它。
-
 * **`server.py`** (位于项目根目录):
   这是我们的FastAPI后端服务。它负责创建一个 `/api/analyze` 接口，接收前端上传的视频，将其存为临时文件，然后通过调用 `nat run` 命令行来执行AI代理的分析任务，最后将结果返回给前端。
 
@@ -62,6 +48,13 @@ nat workflow reinstall intelligent_distributor
 
 看到 `Workflow 'intelligent_distributor' reinstalled successfully.` 即表示成功。
 
+### 本地跑
+
+```bash
+nat nat run --config_file intelligent_distributor/src/intelligent_distributor/configs/config.yml --input "請分析这个影片 '[本地视频地址]'，並告訴我它適合發布到哪些平台。"
+```
+便能看到Video analyzer agent对于视频的分析和平台推荐
+
 ### 5\. 启动并运行！
 
 一切就绪！现在您可以启动服务并与之交互。
@@ -71,7 +64,7 @@ nat workflow reinstall intelligent_distributor
 在 `NeMo-Agent-Toolkit` 根目录下，运行以下命令：
 
 ```bash
-uvicorn server:app --reload
+uvicorn intelligent_distributor_server:app --reload
 ```
 
 服务将在 `http://127.0.0.1:8000` 启动。
@@ -82,17 +75,13 @@ uvicorn server:app --reload
 
 ```bash
 # for macOS
-open index.html
+open intelligent_distributor.html
 
 # for Windows
-start index.html
+start intelligent_distributor.html
 
 # for Linux
-xdg-open index.html
+xdg-open intelligent_distributor.html
 ```
 
 现在，您可以在打开的网页上上传视频，体验完整的AI分析流程了。
-
------
-
-现在是台湾时间2025年9月1日，下午3:27，这份精简的指南清晰地说明了如何运行您的项目。恭喜！
