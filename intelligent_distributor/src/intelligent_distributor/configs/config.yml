@@ -1,0 +1,21 @@
+# intelligent_distributor/configs/config.yml
+
+general:
+  use_uvloop: true
+
+functions:
+  video_analyzer:
+    _type: video_analyzer
+    description: "分析本地视频文件，理解其内容、风格，并推荐最适合发布的社交媒体平台。"
+
+llms:
+  nim_llm:
+    _type: nim
+    model_name: meta/llama-3.1-70b-instruct
+    temperature: 0.0
+
+workflow:
+  _type: react_agent
+  tool_names: [video_analyzer]
+  llm_name: nim_llm
+  verbose: true
