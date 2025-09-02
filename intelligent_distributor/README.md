@@ -48,6 +48,25 @@ nat workflow reinstall intelligent_distributor
 
 看到 `Workflow 'intelligent_distributor' reinstalled successfully.` 即表示成功。
 
+### 添加小红书mcp
+```bash
+# 要先进行安装
+cd xiaohongshu_mcp
+uv pip install -e .
+cd ..
+nat workflow reinstall xiaohongshu_mcp
+
+# 注册小红书 mcp服务
+nat mcp --config_file xiaohongshu_mcp/src/xiaohongshu_mcp/configs/config.yml \
+  --host 0.0.0.0 \
+  --port 9901 \
+  --name "My MCP Server"
+  --tool_names xiaohongshu_login \
+  --tool_names xiaohongshu_check_login_status\
+  --tool_names xiaohongshu_upload_video
+
+```
+
 ### 本地跑
 
 ```bash

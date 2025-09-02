@@ -7,15 +7,30 @@ functions:
   video_analyzer:
     _type: video_analyzer
     description: "分析本地视频文件，理解其内容、风格，并推荐最适合发布的社交媒体平台。"
+  xiaohongshu_login:
+    _type: mcp_tool_wrapper
+    url: "http://localhost:9901/sse"
+    mcp_tool_name: xiaohongshu_login
+  xiaohongshu_check_login_status:
+    _type: mcp_tool_wrapper
+    url: "http://localhost:9901/sse"
+    mcp_tool_name: xiaohongshu_check_login_status
+  xiaohongshu_upload_video:
+    _type: mcp_tool_wrapper
+    url: "http://localhost:9901/sse"
+    mcp_tool_name: xiaohongshu_upload_video
 
 llms:
   nim_llm:
-    _type: nim
-    model_name: meta/llama-3.1-70b-instruct
-    temperature: 0.0
+    _type: openai
+    model_name: "qwen-plus"
+    api_key: "YOUR API KEY"
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    temperature: 0.7
+    max_tokens: 2048
 
 workflow:
   _type: react_agent
-  tool_names: [video_analyzer]
+  tool_names: [video_analyzer, xiaohongshu_login, xiaohongshu_check_login_status, xiaohongshu_upload_video]
   llm_name: nim_llm
   verbose: true

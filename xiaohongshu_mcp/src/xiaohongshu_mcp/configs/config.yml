@@ -1,0 +1,31 @@
+# intelligent_distributor/configs/config.yml
+
+general:
+  use_uvloop: true
+
+functions:
+  xiaohongshu_login:
+    _type: xiaohongshu_login
+    description: "利用playwright登录小红书，需要手动扫码"
+  xiaohongshu_check_login_status:
+    _type: xiaohongshu_check_login_status
+    description: "利用playwright检查小红书状态"
+  xiaohongshu_upload_video:
+    _type: xiaohongshu_upload_video
+    description: "利用playwright登录小红书，自动上传视频，需要提供视频文件路径、标题、描述等信息"
+
+llms:
+  nim_llm:
+    _type: openai
+    model_name: "qwen-plus"
+    api_key: "YOUR API KEY"
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    temperature: 0.7
+    max_tokens: 2048
+
+workflow:
+  _type: react_agent
+  tool_names: [xiaohongshu_login, xiaohongshu_check_login_status, xiaohongshu_upload_video]
+  llm_name: nim_llm
+  verbose: true
+  parse_agent_response_max_retries: 3
