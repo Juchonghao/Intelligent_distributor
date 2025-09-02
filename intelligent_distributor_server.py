@@ -7,7 +7,8 @@ import json
 import asyncio
 import traceback
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from typing import Optional
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 
 from nat.builder.workflow_builder import WorkflowBuilder
@@ -18,7 +19,6 @@ from nat.runtime.loader import PluginTypes, discover_and_register_plugins
 async def lifespan(app: FastAPI):
     """
     應用程式生命週期管理。
-    此函數現在只負責建立 AI 代理 (Builder)，不再處理 MCP 伺服器。
     """
     print("应用启动事件 (lifespan)...")
     try:
@@ -40,7 +40,6 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"错误：AI代理在启动时初始化失败: {e}\n{traceback.format_exc()}")
         app.state.builder = None
-        # 即使代理初始化失敗，應用也應繼續運行以提供錯誤訊息
         yield
 
     print("应用关闭事件 (lifespan)...")
@@ -48,6 +47,38 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="智能视频分发代理 API", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+
+
+@app.post("/api/login")
+async def login_to_platform(request: Request, platform: str = Form(...)):
+    """
+    觸發指定平台的登入工具。
+    """
+    builder = request.app.state.builder
+    if not builder:
+        raise HTTPException(status_code=500, detail="AI代理未能初始化。")
+
+    platform_map = {"小红书": "xiaohongshu"}
+    platform_id = platform_map.get(platform)
+    if not platform_id:
+        raise HTTPException(status_code=400, detail=f"不支持的平台: {platform}")
+
+    tool_name = f"{platform_id}_login"
+    print(f"准备调用登入工具: {tool_name}")
+
+    try:
+        login_tool = builder.get_function(tool_name)
+        # [修正] 傳入工具 schema 所需的 dummy 參數
+        result = await login_tool.ainvoke({"dummy": "start"})
+
+        if result:
+             return {"status": "success", "message": f"登入 {platform} 成功，請檢查伺服器端彈出的瀏覽器視窗完成掃碼。"}
+        else:
+             return {"status": "pending", "message": "登入流程已啟動但可能需要手動操作。"}
+
+    except Exception as e:
+        print(f"登入 {platform} 时发生错误: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"登入 {platform} 失败: {str(e)}")
 
 
 @app.post("/api/analyze")
@@ -63,12 +94,9 @@ async def analyze_video_endpoint(request: Request, video: UploadFile = File(...)
             temp_file_path = tmp_file.name
 
         video_analyzer_tool = builder.get_function("video_analyzer")
-        print(f"直接获取函数对象: {video_analyzer_tool}")
-
         input_args = {"video_file_path": temp_file_path}
         result_chunks = await video_analyzer_tool.ainvoke(input_args)
-        print(f"收到工具的直接返回结果 (分块): {result_chunks}")
-        
+
         if not isinstance(result_chunks, list):
              return {"raw_result": "Agent did not return a valid list."}
 
@@ -93,8 +121,55 @@ async def analyze_video_endpoint(request: Request, video: UploadFile = File(...)
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             os.unlink(temp_file_path)
-            print(f"临时文件已删除: {temp_file_path}")
 
+@app.post("/api/upload")
+async def upload_to_platform_endpoint(
+    request: Request,
+    video: UploadFile = File(...),
+    platform: str = Form(...),
+    title: str = Form(""),
+    description: str = Form(""),
+    tags_json: str = Form("[]")
+):
+    builder = request.app.state.builder
+    if not builder:
+        raise HTTPException(status_code=500, detail="AI代理未能初始化。")
+
+    platform_map = { "小红书": "xiaohongshu", "B站": "bilibili", "YouTube": "youtube", "抖音": "douyin" }
+    platform_id = platform_map.get(platform)
+    if not platform_id:
+        raise HTTPException(status_code=400, detail=f"不支持的平台: {platform}")
+
+    tool_name = f"{platform_id}_upload_video"
+    print(f"准备调用工具: {tool_name}")
+
+    temp_file_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(video.filename)[1]) as tmp_file:
+            shutil.copyfileobj(video.file, tmp_file)
+            temp_file_path = tmp_file.name
+
+        upload_tool = builder.get_function(tool_name)
+        tags = json.loads(tags_json)
+        input_args = {
+            "video_path": temp_file_path,
+            "title": title,
+            "description": description,
+            "tags": tags
+        }
+
+        print(f"调用工具 '{tool_name}'，参数: {input_args}")
+        result = await upload_tool.ainvoke(input_args)
+        print(f"工具 '{tool_name}' 返回结果: {result}")
+
+        return {"status": "success", "message": f"视频已成功上传至 {platform}", "details": result}
+
+    except Exception as e:
+        print(f"上传至 {platform} 时发生错误: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"上传至 {platform} 失败: {str(e)}")
+    finally:
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.unlink(temp_file_path)
 
 @app.get("/")
 def read_root():
