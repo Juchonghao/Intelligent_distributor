@@ -5,6 +5,7 @@ import tempfile
 import uvicorn
 import json
 import asyncio
+import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,10 @@ from nat.runtime.loader import PluginTypes, discover_and_register_plugins
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """
+    應用程式生命週期管理。
+    此函數現在只負責建立 AI 代理 (Builder)，不再處理 MCP 伺服器。
+    """
     print("应用启动事件 (lifespan)...")
     try:
         discover_and_register_plugins(PluginTypes.ALL)
@@ -28,13 +33,14 @@ async def lifespan(app: FastAPI):
         builder_context_manager = WorkflowBuilder.from_config(config_obj)
 
         async with builder_context_manager as builder:
-            print("AI代理构建器 (Builder) 已成功创建并准备就绪。")
+            print("AI代理构建器 (Builder) 已成功创建并准备就緒。")
             app.state.builder = builder
             yield
 
     except Exception as e:
-        print(f"错误：AI代理在启动时初始化失败: {e}")
+        print(f"错误：AI代理在启动时初始化失败: {e}\n{traceback.format_exc()}")
         app.state.builder = None
+        # 即使代理初始化失敗，應用也應繼續運行以提供錯誤訊息
         yield
 
     print("应用关闭事件 (lifespan)...")
@@ -62,18 +68,14 @@ async def analyze_video_endpoint(request: Request, video: UploadFile = File(...)
         input_args = {"video_file_path": temp_file_path}
         result_chunks = await video_analyzer_tool.ainvoke(input_args)
         print(f"收到工具的直接返回结果 (分块): {result_chunks}")
-
-        # --- 这是最终的、正确的修正 ---
-        # 1. 检查返回的是否是列表
+        
         if not isinstance(result_chunks, list):
              return {"raw_result": "Agent did not return a valid list."}
 
-        # 2. 拼接所有文本片段
         full_raw_text = "".join(chunk.get("text", "") for chunk in result_chunks if isinstance(chunk, dict))
         print(f"拼接后的完整文本: {full_raw_text}")
 
         try:
-            # 3. 对拼接后的完整文本进行清理和解析
             if '```json' in full_raw_text:
                 cleaned_text = full_raw_text.split('```json\n', 1)[1].rsplit('\n```', 1)[0]
             else:
@@ -86,7 +88,6 @@ async def analyze_video_endpoint(request: Request, video: UploadFile = File(...)
             return {"raw_result": result_chunks}
 
     except Exception as e:
-        import traceback
         print(f"处理请求时发生错误: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
     finally:

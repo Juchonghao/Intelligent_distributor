@@ -60,7 +60,7 @@ nat workflow reinstall xiaohongshu_mcp
 nat mcp --config_file xiaohongshu_mcp/src/xiaohongshu_mcp/configs/config.yml \
   --host 0.0.0.0 \
   --port 9901 \
-  --name "My MCP Server"
+  --name "My MCP Server"\
   --tool_names xiaohongshu_login \
   --tool_names xiaohongshu_check_login_status\
   --tool_names xiaohongshu_upload_video

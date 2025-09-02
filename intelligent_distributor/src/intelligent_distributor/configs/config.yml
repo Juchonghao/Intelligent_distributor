@@ -9,15 +9,15 @@ functions:
     description: "分析本地视频文件，理解其内容、风格，并推荐最适合发布的社交媒体平台。"
   xiaohongshu_login:
     _type: mcp_tool_wrapper
-    url: "http://localhost:9901/sse"
+    url: "http://localhost:9901/mcp"
     mcp_tool_name: xiaohongshu_login
   xiaohongshu_check_login_status:
     _type: mcp_tool_wrapper
-    url: "http://localhost:9901/sse"
+    url: "http://localhost:9901/mcp"
     mcp_tool_name: xiaohongshu_check_login_status
   xiaohongshu_upload_video:
     _type: mcp_tool_wrapper
-    url: "http://localhost:9901/sse"
+    url: "http://localhost:9901/mcp"
     mcp_tool_name: xiaohongshu_upload_video
 
 llms:
