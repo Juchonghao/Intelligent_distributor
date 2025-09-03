@@ -1,19 +1,26 @@
 import os
+import json
 import asyncio
 import logging
-from bilibili_api import video, Credential, sync
-from playwright.async_api import async_playwright # [修正] 導入 Playwright
-from pydantic import Field, BaseModel, ConfigDict
+import datetime
+from pydantic import ConfigDict
 
 from nat.builder.builder import Builder
 from nat.builder.function_info import FunctionInfo
 from nat.cli.register_workflow import register_function
 from nat.data_models.function import FunctionBaseConfig
 
+from playwright.async_api import async_playwright
+
+# [Final Correction] Using flat imports and removing the non-working 'login' import
+from bilibili_api import Credential, sync, video
+from bilibili_api import video_uploader  # 新增导入
+
+
 logger = logging.getLogger(__name__)
 COOKIE_FILE = ".data/bilibili_cookies.json"
 
-# --- 設定類別 ---
+# --- Config Classes (Unchanged) ---
 class BilibiliBaseConfig(FunctionBaseConfig):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     cookie_path: str = COOKIE_FILE
@@ -24,101 +31,144 @@ class BilibiliLoginConfig(BilibiliBaseConfig, name="bilibili_login"):
 class BilibiliUploadVideoConfig(BilibiliBaseConfig, name="bilibili_upload_video"):
     pass
 
-# --- 工具實現 (使用 Playwright 進行瀏覽器 QR Code 登入) ---
+
+# --- Login Function (Reverted to the PROVEN Playwright method) ---
 @register_function(config_type=BilibiliLoginConfig)
 async def bilibili_login(tool_config: BilibiliLoginConfig, builder: Builder):
     async def _bilibili_login(dummy: str = "start") -> bool:
         playwright = None
         browser = None
         try:
-            logger.info("Starting Bilibili login via browser automation...")
             playwright = await async_playwright().start()
             browser = await playwright.chromium.launch(headless=False)
             context = await browser.new_context()
             page = await context.new_page()
+            page.set_default_timeout(180000)
 
-            logger.info("Navigating to Bilibili login page. Please scan the QR code in the browser window.")
-            await page.goto("https://passport.bilibili.com/login")
+            logger.info("🌐 Loading Bilibili login page...")
+            await page.goto("https://passport.bilibili.com/login", wait_until="networkidle")
 
-            # 等待使用者掃描 QR code 並成功跳轉到 B 站主頁
-            logger.info("Waiting for successful login... (Timeout: 3 minutes)")
-            await page.wait_for_url("https://www.bilibili.com/", timeout=180000)
-            logger.info("Login successful! Capturing session cookies.")
+            logger.info("🔍 Detecting QR code...")
+            await page.get_by_role("img", name="Scan me!").wait_for(timeout=60000)
 
-            await asyncio.sleep(3)  # 等待所有 cookies 都被設定好
+            logger.info("🖼️ QR code visible. Please scan with the Bilibili app within 3 minutes.")
+            logger.info("⏳ Awaiting scan and confirmation...")
+            await page.wait_for_url("https://www.bilibili.com/**", timeout=180000, wait_until="domcontentloaded")
+            logger.info("✅ Login successful! Redirected to Bilibili homepage.")
+
+            logger.info("🍪 Fetching and saving credential...")
+            await asyncio.sleep(3)
 
             cookies = await context.cookies()
-
-            # 從 cookies 中提取 bilibili-api-python 需要的核心憑證資訊
-            sessdata = ""
-            bili_jct = ""
-            dedeuserid = ""
-
+            required_cookies = {'SESSDATA': None, 'bili_jct': None, 'DedeUserID': None}
             for cookie in cookies:
-                if cookie['name'] == 'SESSDATA':
-                    sessdata = cookie['value']
-                if cookie['name'] == 'bili_jct':
-                    bili_jct = cookie['value']
-                if cookie['name'] == 'DedeUserID':
-                    dedeuserid = cookie['value']
+                if cookie['name'] in required_cookies:
+                    required_cookies[cookie['name']] = cookie['value']
 
-            if not (sessdata and bili_jct and dedeuserid):
-                logger.error("Could not find necessary cookies (SESSDATA, bili_jct, DedeUserID). Login might have failed.")
+            if not all(required_cookies.values()):
+                missing = [k for k, v in required_cookies.items() if not v]
+                logger.error(f"❌ Critical cookie missing: {missing}. Login may not be fully complete.")
                 return False
 
-            credential = Credential(sessdata=sessdata, bili_jct=bili_jct, dedeuserid=dedeuserid)
-
             os.makedirs(os.path.dirname(tool_config.cookie_path), exist_ok=True)
-            credential.save(tool_config.cookie_path)
-            logger.info(f"Bilibili credential saved successfully to {tool_config.cookie_path}")
+            with open(tool_config.cookie_path, 'w', encoding='utf-8') as f:
+                json.dump({
+                    'sessdata': required_cookies['SESSDATA'],
+                    'bili_jct': required_cookies['bili_jct'],
+                    'dedeuserid': required_cookies['DedeUserID'],
+                    'timestamp': datetime.datetime.now().isoformat()
+                }, f, indent=2)
 
-            logger.info("Browser will close in 3 seconds.")
-            await asyncio.sleep(3)
+            logger.info(f"💾 Credential saved to: {os.path.abspath(tool_config.cookie_path)}")
+            logger.info("🎉 Login complete. Browser will close in 5 seconds.")
+            await asyncio.sleep(5)
             return True
-
         except Exception as e:
-            logger.error(f"Bilibili login failed with exception: {e}")
+            logger.error(f"💥 An error occurred during login: {str(e)}")
             import traceback
             logger.error(traceback.format_exc())
+            if 'page' in locals() and not page.is_closed():
+                try:
+                    await page.screenshot(path="login_error.png")
+                    logger.info("Saved screenshot of the error to login_error.png")
+                except Exception as screenshot_error:
+                    logger.error(f"Failed to take screenshot: {screenshot_error}")
             return False
         finally:
-            if browser:
-                await browser.close()
-            if playwright:
-                await playwright.stop()
+            if browser: await browser.close()
+            if playwright: await playwright.stop()
+            logger.info("🔌 Browser resources have been cleaned up.")
 
     yield FunctionInfo.from_fn(_bilibili_login, description="Launches the QR Code login process for a Bilibili account.")
 
+
 @register_function(config_type=BilibiliUploadVideoConfig)
-async def bilibili_upload_video(tool_config: BilibiliUploadVideoConfig, builder: Builder):
-    async def _bilibili_upload_video(video_path: str, title: str, description: str, tags: list = None) -> str:
-        if not os.path.exists(tool_config.cookie_path):
-            return "Error: Bilibili cookie file not found. Please log in first."
-        if not os.path.exists(video_path):
-            return f"Error: Video file not found at {video_path}"
-
+async def bilibili_upload_video(config: BilibiliUploadVideoConfig, builder: Builder):
+    async def _inner(video_path: str, title: str, description: str, tags: list = None) -> str:
         try:
-            credential = Credential.from_file(tool_config.cookie_path)
-            await credential.check_valid()
-            logger.info("Bilibili credential loaded and validated.")
+            # ========== 前置检查 ==========
+            if not os.path.exists(video_path):
+                return f"Error: 视频文件不存在 {video_path}"
+            if not os.path.exists(config.cookie_path):
+                return "Error: Cookie文件不存在"
 
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, lambda: sync(
-                video.upload(
-                    credential=credential,
-                    path=video_path,
-                    title=title,
-                    desc=description,
-                    tags=tags or [],
-                )
-            ))
+            # 验证文件格式和大小
+            if not video_path.lower().endswith(('.mp4', '.flv')):
+                return "Error: 仅支持MP4/FLV格式"
+            if os.path.getsize(video_path) > 2 * 1024 * 1024 * 1024:  # 2GB
+                return "Error: 视频超过大小限制"
 
-            result_msg = "Video uploaded successfully to Bilibili!"
-            logger.info(result_msg)
-            return result_msg
+            # ========== 凭证加载 ==========
+            with open(config.cookie_path, 'r', encoding='utf-8') as f:
+                cookie_data = json.load(f)
+
+            credential = Credential(
+                sessdata=cookie_data['sessdata'],
+                bili_jct=cookie_data['bili_jct'],
+                dedeuserid=cookie_data.get('dedeuserid', '')
+            )
+
+            # ========== 上传配置 ==========
+            # 使用新版VideoMeta和VideoUploaderPage
+            meta = video_uploader.VideoMeta(
+                tid=17,  # 分区ID（17=单机游戏，根据实际需要修改）
+                title=title,
+                tags=tags or [],
+                desc=description,
+                cover="/Users/chonghaoju/Desktop/ecommerce_vlm_flow.png",
+                no_reprint=True  # 禁止转载
+            )
+
+            page = video_uploader.VideoUploaderPage(
+                path=video_path,
+                title=title,
+                description=description
+            )
+
+            # ========== 创建上传器 ==========
+            uploader = video_uploader.VideoUploader(
+                pages=[page],
+                meta=meta,
+                credential=credential,
+                line=video_uploader.Lines.QN
+            )
+
+            # ========== 进度监控 ==========
+            @uploader.on("UPLOAD_PROGRESS")
+            async def handle_progress(data):
+                logger.info(f"上传进度: {data.get('percent', 0):.1%}")
+
+            # ========== 执行上传 ==========
+            result = await uploader.start()
+            # =============================
+
+            if not result.get('bvid'):
+                raise ValueError("上传未返回有效BV号")
+
+            return f"🎉 上传成功! BV号: {result['bvid']}"
+
         except Exception as e:
-            error_msg = f"Failed to upload video to Bilibili: {e}"
-            logger.error(error_msg)
-            return error_msg
+            logger.error(f"💥 系统错误: {str(e)}", exc_info=True)
+            return f"上传失败: {str(e)}"
 
-    yield FunctionInfo.from_fn(_bilibili_upload_video, description="Uploads a specified video file to Bilibili.")
+    yield FunctionInfo.from_fn(_inner, description="B站视频上传")
