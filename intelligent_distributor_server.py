@@ -58,7 +58,11 @@ async def login_to_platform(request: Request, platform: str = Form(...)):
     if not builder:
         raise HTTPException(status_code=500, detail="AI代理未能初始化。")
 
-    platform_map = {"小红书": "xiaohongshu"}
+    # [修正] 在平台對應表中加入 B 站
+    platform_map = {
+        "小红书": "xiaohongshu",
+        "B站": "bilibili"
+    }
     platform_id = platform_map.get(platform)
     if not platform_id:
         raise HTTPException(status_code=400, detail=f"不支持的平台: {platform}")
@@ -68,7 +72,7 @@ async def login_to_platform(request: Request, platform: str = Form(...)):
 
     try:
         login_tool = builder.get_function(tool_name)
-        # [修正] 傳入工具 schema 所需的 dummy 參數
+        # 傳入工具 schema 所需的 dummy 參數
         result = await login_tool.ainvoke({"dummy": "start"})
 
         if result:
@@ -127,9 +131,9 @@ async def upload_to_platform_endpoint(
     request: Request,
     video: UploadFile = File(...),
     platform: str = Form(...),
-    title: str = Form(""),
-    description: str = Form(""),
-    tags_json: str = Form("[]")
+    title: Optional[str] = Form(""),
+    description: Optional[str] = Form(""),
+    tags_json: Optional[str] = Form("[]")
 ):
     builder = request.app.state.builder
     if not builder:

@@ -64,6 +64,13 @@ nat mcp --config_file xiaohongshu_mcp/src/xiaohongshu_mcp/configs/config.yml \
   --tool_names xiaohongshu_login \
   --tool_names xiaohongshu_check_login_status\
   --tool_names xiaohongshu_upload_video
+  
+nat mcp --config_file bilibili_mcp/src/bilibili_mcp/configs/config.yml \
+  --host 0.0.0.0 \
+  --port 9902 \
+  --name "My MCP Server"\
+  --tool_names bilibili_login \
+  --tool_names bilibili_upload_video  
 
 ```
 

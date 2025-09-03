@@ -18,17 +18,27 @@
 
 <div class="w-full max-w-4xl bg-gray-800 shadow-2xl rounded-2xl p-8 space-y-6">
 
-  <!-- [重要] 標題和登入按鈕區塊 -->
-  <div class="flex justify-between items-center">
+  <!-- [更新] 標題和多平台登入按鈕區塊 -->
+  <div class="flex justify-between items-start">
     <div class="text-left">
       <h1 class="text-3xl font-bold text-white">智能视频分发代理</h1>
       <p class="text-gray-400 mt-2">AI-Powered Video Distribution Agent</p>
     </div>
-    <div class="text-right">
-      <button id="login-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-        登入小红书
-      </button>
-      <p id="login-status" class="text-xs text-gray-500 mt-1 h-4"></p>
+    <div class="flex items-start space-x-4">
+      <!-- B站登入 -->
+      <div class="text-right">
+        <button id="login-button-bilibili" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+          登入B站
+        </button>
+        <p id="login-status-bilibili" class="text-xs text-gray-500 mt-1 h-4"></p>
+      </div>
+      <!-- 小红书登入 -->
+      <div class="text-right">
+        <button id="login-button-xiaohongshu" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+          登入小红书
+        </button>
+        <p id="login-status-xiaohongshu" class="text-xs text-gray-500 mt-1 h-4"></p>
+      </div>
     </div>
   </div>
 
@@ -73,8 +83,10 @@
 
 <script>
   // 獲取所有需要的 DOM 元素
-  const loginButton = document.getElementById('login-button');
-  const loginStatus = document.getElementById('login-status');
+  const loginButtonBilibili = document.getElementById('login-button-bilibili');
+  const loginStatusBilibili = document.getElementById('login-status-bilibili');
+  const loginButtonXiaohongshu = document.getElementById('login-button-xiaohongshu');
+  const loginStatusXiaohongshu = document.getElementById('login-status-xiaohongshu');
   const uploadState = document.getElementById('upload-state');
   const resultsState = document.getElementById('results-state');
   const uploadInput = document.getElementById('video-upload-input');
@@ -98,7 +110,8 @@
   const platformIcons = { "B站": "https://www.bilibili.com/favicon.ico", "YouTube": "https://www.youtube.com/s/desktop/1109159d/img/favicon_32x32.png", "小红书": "https://www.xiaohongshu.com/favicon.ico", "抖音": "https://www.douyin.com/favicon.ico" };
 
   // --- 事件監聽 ---
-  loginButton.addEventListener('click', handleLogin);
+  loginButtonBilibili.addEventListener('click', () => handleLoginPlatform('B站'));
+  loginButtonXiaohongshu.addEventListener('click', () => handleLoginPlatform('小红书'));
   dropZone.addEventListener('click', () => uploadInput.click());
   uploadInput.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
   dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-indigo-500'); });
@@ -106,14 +119,26 @@
   dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('border-indigo-500'); const file = e.dataTransfer.files[0]; handleFileUpload(file); });
   resetButton.addEventListener('click', () => { uploadState.classList.remove('hidden'); resultsState.classList.add('hidden'); uploadInput.value = ''; currentFile = null; });
 
-  // --- 登入功能 ---
-  async function handleLogin() {
-    loginStatus.textContent = '登录中...';
-    loginStatus.className = 'text-xs text-yellow-400 mt-1 h-4';
-    loginButton.disabled = true;
+  // --- [更新] 通用的登入功能 ---
+  async function handleLoginPlatform(platform) {
+    let button, statusEl;
+    if (platform === 'B站') {
+      button = loginButtonBilibili;
+      statusEl = loginStatusBilibili;
+    } else if (platform === '小红书') {
+      button = loginButtonXiaohongshu;
+      statusEl = loginStatusXiaohongshu;
+    } else {
+      console.error("未知的平台:", platform);
+      return;
+    }
+
+    statusEl.textContent = '请求中...';
+    statusEl.className = 'text-xs text-yellow-400 mt-1 h-4';
+    button.disabled = true;
 
     const formData = new FormData();
-    formData.append('platform', '小红书');
+    formData.append('platform', platform);
 
     try {
       const response = await fetch('http://127.0.0.1:8000/api/login', {
@@ -124,20 +149,26 @@
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.detail || '登入請求失敗');
+        throw new Error(result.detail || '登入请求失败');
       }
 
-      loginStatus.textContent = '登入成功！';
-      loginStatus.className = 'text-xs text-green-400 mt-1 h-4';
-      loginButton.classList.remove('bg-red-600', 'hover:bg-red-700');
-      loginButton.classList.add('bg-green-600');
-      loginButton.textContent = '已登入小红书';
+      statusEl.textContent = '请在伺服器端扫码';
+      statusEl.className = 'text-xs text-green-400 mt-1 h-4';
+
+      // 更改按钮颜色和文字
+      if (platform === 'B站') {
+        button.classList.remove('bg-sky-600', 'hover:bg-sky-700');
+      } else if (platform === '小红书') {
+        button.classList.remove('bg-red-600', 'hover:bg-red-700');
+      }
+      button.classList.add('bg-green-600');
+      button.textContent = `已登入${platform}`;
 
     } catch (error) {
-      console.error('登入失败:', error);
-      loginStatus.textContent = `登入失败: ${error.message}`;
-      loginStatus.className = 'text-xs text-red-400 mt-1 h-4';
-      loginButton.disabled = false;
+      console.error(`登入 ${platform} 失败:`, error);
+      statusEl.textContent = `登入失败: ${error.message}`;
+      statusEl.className = 'text-xs text-red-400 mt-1 h-4';
+      button.disabled = false;
     }
   }
 

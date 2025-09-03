@@ -9,6 +9,8 @@ from nat.builder.function_info import FunctionInfo
 from nat.cli.register_workflow import register_function
 from nat.data_models.function import FunctionBaseConfig
 
+from typing import AsyncGenerator
+
 logger = logging.getLogger(__name__)
 
 class VideoAnalyzerConfig(FunctionBaseConfig, name="video_analyzer"):
