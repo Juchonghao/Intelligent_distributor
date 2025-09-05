@@ -1,0 +1,25 @@
+# intelligent_distributor/configs/config.yml
+
+general:
+  use_uvloop: true
+
+functions:
+  video_thumbnail_generation:
+    _type: video_thumbnail_generation
+    description: "获取视频封面帧，结合标题生成个性化视频封面图"
+
+llms:
+  nim_llm:
+    _type: openai
+    model_name: "qwen-plus"
+    api_key: "YOUR API KEY"
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    temperature: 0.7
+    max_tokens: 2048
+
+workflow:
+  _type: react_agent
+  tool_names: [video_thumbnail_generation]
+  llm_name: nim_llm
+  verbose: true
+  parse_agent_response_max_retries: 3

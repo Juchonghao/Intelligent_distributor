@@ -72,6 +72,16 @@ nat mcp --config_file bilibili_mcp/src/bilibili_mcp/configs/config.yml \
   --tool_names bilibili_login \
   --tool_names bilibili_upload_video  
 
+# 注册视频封面处理工具
+# 需要先安装ffmpeg
+macOS: 使用 Homebrew: brew install ffmpeg
+Linux (Ubuntu/Debian): sudo apt update && sudo apt install ffmpeg
+
+nat mcp --config_file video_thumbnail_mcp/src/video_thumbnail_mcp/configs/config.yml \
+  --host 0.0.0.0 \
+  --port 9903 \
+  --name "My MCP Server"\
+  --tool_names video_thumbnail_generation
 ```
 
 ### 本地跑

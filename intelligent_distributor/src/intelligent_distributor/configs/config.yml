@@ -27,6 +27,10 @@ functions:
     _type: mcp_tool_wrapper
     url: "http://localhost:9902/mcp"
     mcp_tool_name: bilibili_upload_video
+  video_thumbnail_generation:
+    _type: mcp_tool_wrapper
+    url: "http://localhost:9903/mcp"
+    mcp_tool_name: video_thumbnail_generation
 
 llms:
   nim_llm:
@@ -39,6 +43,6 @@ llms:
 
 workflow:
   _type: react_agent
-  tool_names: [video_analyzer, xiaohongshu_login, xiaohongshu_check_login_status, xiaohongshu_upload_video, bilibili_login, bilibili_upload_video]
+  tool_names: [video_analyzer, video_thumbnail_generation, xiaohongshu_login, xiaohongshu_check_login_status, xiaohongshu_upload_video, bilibili_login, bilibili_upload_video]
   llm_name: nim_llm
   verbose: true
