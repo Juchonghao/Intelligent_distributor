@@ -78,6 +78,63 @@
 
 本系统采用前后端分离的微服务架构，其核心交互流程如下：
 
+```mermaid
+graph TD
+    subgraph "用户端 (User Side)"
+        User(👨‍💻 用户/创作者) --> Frontend[前端界面 (React UI)];
+    end
+
+    subgraph "应用后端 (Application Backend)"
+        Frontend -- "1. 上传视频/发起任务<br/>(Analyze, Login, Upload...)" --> MainBackend[主后端服务器 (FastAPI)];
+        MainBackend -- "2. 调用工作流/工具" --> NeMoToolkit;
+    end
+
+    subgraph "NVIDIA NeMo Agent Toolkit"
+        NeMoToolkit --> Workflow[智能分发工作流<br/>intelligent_distributor];
+        NeMoToolkit --> MCP{NVIDIA MCP<br/>(工具控制平面)};
+    end
+
+    subgraph "MCP 微服务工具集 (Microservice Tools)"
+        MCP -- "路由请求" --> BiliMCP[Bilibili 工具<br/>(登录/上传)];
+        MCP -- "路由请求" --> XhsMCP[小红书 工具<br/>(登录/上传)];
+        MCP -- "路由请求" --> ThumbMCP[封面生成工具<br/>(提取/美化/合成)];
+    end
+
+    subgraph "外部依赖与服务 (External Dependencies & Services)"
+        Workflow -- "3a. 分析视频内容" --> AIModels((🤖 多模态大模型<br/>通义千问));
+        ThumbMCP -- "3b. AI美化封面" --> AIModels;
+        ThumbMCP -- "3c. 视频处理" --> CoreTools((🛠️ 核心库<br/>FFmpeg));
+        BiliMCP -- "3d. 平台交互" --> Platforms((🌐 社交媒体平台<br/>Bilibili));
+        BiliMCP -- "浏览器自动化" --> CoreTools2((<br/>Playwright));
+        XhsMCP -- "3e. 平台交互" --> Platforms2((<br/>小红书));
+        XhsMCP -- "浏览器自动化" --> CoreTools2;
+    end
+
+    subgraph "结果返回 (Result Flow)"
+        NeMoToolkit -- "4. 返回处理结果" --> MainBackend;
+        MainBackend -- "5. 响应前端" --> Frontend;
+        Frontend -- "6. 展示结果/新视频" --> User;
+    end
+
+    %% --- Styling ---
+    style User fill:#cde4ff,stroke:#6699ff,stroke-width:2px
+    style Frontend fill:#d5f5e3,stroke:#58d68d,stroke-width:2px
+    style MainBackend fill:#fdebd0,stroke:#f5b041,stroke-width:2px
+    style NeMoToolkit fill:#ebdef0,stroke:#a569bd,stroke-width:4px,stroke-dasharray: 5 5
+    style Workflow fill:#e8daef,stroke:#a569bd,stroke-width:2px
+    style MCP fill:#e8daef,stroke:#a569bd,stroke-width:2px,shape:diamond
+    style BiliMCP fill:#e6f2ff,stroke:#3399ff,stroke-width:1.5px
+    style XhsMCP fill:#ffe6e6,stroke:#ff4d4d,stroke-width:1.5px
+    style ThumbMCP fill:#fff2e6,stroke:#ff9933,stroke-width:1.5px
+    style AIModels fill:#d1e2f0,stroke:#4a7a9e,stroke-width:1.5px
+    style Platforms fill:#f0d1e2,stroke:#9e4a7a,stroke-width:1.5px
+    style Platforms2 fill:#f0d1e2,stroke:#9e4a7a,stroke-width:1.5px
+    style CoreTools fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
+    style CoreTools2 fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
+
+```
+
+
 1. **前端 (React)**: 用户通过浏览器上传视频并发起任务。
 
 2. **主后端 (FastAPI Server)**: 作为总控制器，接收前端请求，并调用 NeMo Agent Toolkit 的工作流和工具。
