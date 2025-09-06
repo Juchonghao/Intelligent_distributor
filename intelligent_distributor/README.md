@@ -110,14 +110,18 @@ uvicorn intelligent_distributor_server:app --reload
 打开**一个新的终端**，同样在 `NeMo-Agent-Toolkit` 根目录下，运行以下命令在浏览器中打开前端页面：
 
 ```bash
+cd intelligent_distributor_frontend
+npm install 
+npm run dev
+
 # for macOS
-open intelligent_distributor.html
-
-# for Windows
-start intelligent_distributor.html
-
-# for Linux
-xdg-open intelligent_distributor.html
+#open intelligent_distributor.html
+#
+## for Windows
+#start intelligent_distributor.html
+#
+## for Linux
+#xdg-open intelligent_distributor.html
 ```
 
 现在，您可以在打开的网页上上传视频，体验完整的AI分析流程了。
