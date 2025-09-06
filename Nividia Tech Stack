@@ -1,0 +1,21 @@
+项目中使用的 NVIDIA 技术
+本项目深度整合了 NVIDIA 的 AI 软件技术栈，特别是以 NVIDIA NeMo Agent Toolkit 作为其核心框架。以下是项目中关键的 NVIDIA 技术及其应用：
+
+1. NVIDIA NeMo Agent Toolkit
+核心框架: 整个应用的 Agentic 工作流，包括工具的定义、注册、发现和执行，完全构建于 NeMo Agent Toolkit 之上。nat 命令行工具贯穿了整个开发和运行流程。
+
+模块化工具开发: 项目中的所有独立功能（如B站登录、视频封面生成、小红书上传）都被封装为遵循 NeMo Agent 规范的工具。这得益于框架提供的 @register_function 装饰器和标准化的配置管理，极大地提高了开发效率和模块化程度。
+
+工作流编排 (Workflow Orchestration): intelligent_distributor 工作流负责编排多个工具和模型调用，实现了从视频分析到内容生成的复杂任务逻辑。
+
+2. NVIDIA MCP (Multi-Tool Control Plane)
+分布式微服务架构: 项目的关键特色之一是使用了 NeMo Agent 的 MCP 架构。通过 nat mcp 命令，我们将每个平台（B站、小红书）的操作以及视频封面生成功能，作为独立的微服务启动。
+
+可扩展性与稳定性: 这种架构将每个工具隔离开，确保了单个工具的失败不会影响整个系统的运行。同时，这也为未来横向扩展（例如，为高并发的上传任务增加更多实例）提供了坚实的基础。
+
+3. NVIDIA AI 模型（生态集成）
+模型兼容性: NeMo Agent Toolkit 旨在与各类 AI 模型无缝集成。虽然当前项目为了快速原型开发，暂时使用了第三方模型 API，但整个框架已为接入 NVIDIA NeMo 模型 或其他 NVIDIA NIM (NVIDIA Inference Microservices) 做好了充分准备。
+
+未来升级路径: 将视频分析、封面美化等任务迁移到由 NVIDIA TensorRT-LLM 加速的 NeMo 模型上，是本项目利用 NVIDIA 生态进行性能优化的明确路径。
+
+综上所述，本项目不仅是一个功能性的应用，更是 NVIDIA NeMo Agent Toolkit 在构建复杂、分布式、可扩展 AI 代理应用方面能力的一次全面展示。

@@ -62,7 +62,7 @@ function App() {
       const response = await fetch(`${API_BASE_URL}/login`, { method: 'POST', body: formData });
       const result = await response.json();
       if (!response.ok) throw new Error(result.detail || '登入请求失败');
-      setLoginStatuses(prev => ({ ...prev, [platform]: { status: 'prompt_scan', message: '请在服务器端扫码' } }));
+      setLoginStatuses(prev => ({ ...prev, [platform]: { status: 'prompt_scan', message: '登录成功' } }));
     } catch (error) {
       console.error(`登入 ${platform} 失败:`, error);
       setLoginStatuses(prev => ({ ...prev, [platform]: { status: 'error', message: `登入失败: ${error.message}` } }));

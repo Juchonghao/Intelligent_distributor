@@ -135,7 +135,7 @@ async def upload_to_platform_endpoint(
     platform: str = Form(...),
     title: Optional[str] = Form(""),
     description: Optional[str] = Form(""),
-    tags_json: Optional[str] = Form("[]")
+    tags_json: Optional[str] = Form("[]") # The default is "[]"
 ):
     builder = request.app.state.builder
     if not builder:
@@ -156,7 +156,16 @@ async def upload_to_platform_endpoint(
             temp_file_path = tmp_file.name
 
         upload_tool = builder.get_function(tool_name)
-        tags = json.loads(tags_json)
+
+        # [修正] 增加对 tags_json 的安全检查
+        tags = [] # Default to an empty list
+        if tags_json: # Check if the string is not None or empty
+            try:
+                tags = json.loads(tags_json)
+            except json.JSONDecodeError:
+                print(f"警告：无法解析 tags_json，内容为: '{tags_json}'. 将使用空标签列表。")
+                tags = [] # If parsing fails, fall back to an empty list
+
         input_args = {
             "video_path": temp_file_path,
             "title": title,
