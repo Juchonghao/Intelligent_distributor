@@ -4,6 +4,14 @@
 
 [**🎬 查看项目 Demo 演示**](https://www.bilibili.com/video/BV1S9aqzXEKs)
 
+<img width="1598" height="998" alt="截屏2025-09-06 16 32 47" src="https://github.com/user-attachments/assets/e39f7301-cd19-4bfe-bce0-c0eb5baf4448" />
+
+<img width="1490" height="928" alt="截屏2025-09-06 16 33 55" src="https://github.com/user-attachments/assets/957da859-9780-4041-a09b-a5ba8db57614" />
+
+<img width="1347" height="972" alt="截屏2025-09-06 16 39 08" src="https://github.com/user-attachments/assets/b1250b67-ac82-437b-9cc3-5c2ef0eaeb61" />
+
+<img width="1377" height="952" alt="截屏2025-09-06 16 39 29" src="https://github.com/user-attachments/assets/cb6aba88-753e-4f6d-929e-20e08807b3fe" />
+
 ---
 
 ## 🚀 项目概述
@@ -92,6 +100,9 @@
 
 * **功能**: 接收视频文件路径，调用通义千问多模态VLM分析视频内容，生成 JSON 格式的结构化数据，包括推荐标题、描述、标签，以及针对不同平台（B站、小红书、抖音）的发布建议和适配度评分。
 
+<img width="1466" height="722" alt="截屏2025-09-06 16 41 41" src="https://github.com/user-attachments/assets/1c2b72c6-3daf-42d4-a9de-e9b292d19109" />
+
+
 ### AI 视频封面生成工具 (`video_thumbnail_generation`)
 
 * **技术**: NeMo Agent MCP Tool, FFmpeg, AI Image Models (中文版使用通义千问，英文版使用 Nano Banana)
@@ -105,6 +116,9 @@
   3. 使用 FFmpeg 的 `drawtext` 滤镜将标题精确地叠加在美化后的封面上。
 
   4. 将最终生成的封面图与原视频合并，生成一个带封面的新视频文件。
+ 
+<img width="1466" height="722" alt="截屏2025-09-06 16 41 41" src="https://github.com/user-attachments/assets/d5d620fb-2fdb-4e45-8959-0999b3ac4dfb" />
+ 
 
 ### 多平台登录与上传工具
 
