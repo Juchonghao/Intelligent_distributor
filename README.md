@@ -80,27 +80,27 @@
 
 ```mermaid
 graph TD
-    subgraph "用户端 (User Side)"
+    subgraph UserSide["用户端 (User Side)"]
         User("用户/创作者") --> Frontend[前端界面 (React UI)]
     end
 
-    subgraph "应用后端 (Application Backend)"
+    subgraph AppBackend["应用后端 (Application Backend)"]
         Frontend -- "1. 上传视频/发起任务<br/>(Analyze, Login, Upload...)" --> MainBackend[主后端服务器 (FastAPI)]
         MainBackend -- "2. 调用工作流/工具" --> NeMoToolkit
     end
 
-    subgraph "NVIDIA NeMo Agent Toolkit"
+    subgraph NeMoToolkit["NVIDIA NeMo Agent Toolkit"]
         NeMoToolkit --> Workflow[智能分发工作流<br/>intelligent_distributor]
         NeMoToolkit --> MCP{NVIDIA MCP<br/>(工具控制平面)}
     end
 
-    subgraph "MCP 微服务工具集 (Microservice Tools)"
+    subgraph MCPServices["MCP 微服务工具集 (Microservice Tools)"]
         MCP -- "路由请求" --> BiliMCP[Bilibili 工具<br/>(登录/上传)]
         MCP -- "路由请求" --> XhsMCP[小红书 工具<br/>(登录/上传)]
         MCP -- "路由请求" --> ThumbMCP[封面生成工具<br/>(提取/美化/合成)]
     end
 
-    subgraph "外部依赖与服务 (External Dependencies & Services)"
+    subgraph ExternalServices["外部依赖与服务 (External Dependencies & Services)"]
         Workflow -- "3a. 分析视频内容" --> AIModels(("多模态大模型<br/>通义千问"))
         ThumbMCP -- "3b. AI美化封面" --> AIModels
         ThumbMCP -- "3c. 视频处理" --> CoreTools(("核心库<br/>FFmpeg"))
@@ -110,7 +110,7 @@ graph TD
         XhsMCP -- "浏览器自动化" --> CoreTools2
     end
 
-    subgraph "结果返回 (Result Flow)"
+    subgraph ResultFlow["结果返回 (Result Flow)"]
         NeMoToolkit -- "4. 返回处理结果" --> MainBackend
         MainBackend -- "5. 响应前端" --> Frontend
         Frontend -- "6. 展示结果/新视频" --> User
