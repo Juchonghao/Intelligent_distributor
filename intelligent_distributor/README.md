@@ -18,6 +18,12 @@ uv pip install dashscope
 uv pip install fastapi "uvicorn[standard]"
 ```
 
+```bash
+# 创建python环境
+uv venv --seed .venv 
+source .venv/bin/activate
+```
+
 ### 2\. 关键文件配置
 
 * **`server.py`** (位于项目根目录):
@@ -54,7 +60,16 @@ nat workflow reinstall intelligent_distributor
 cd xiaohongshu_mcp
 uv pip install -e .
 cd ..
+cd bilibili_mcp
+uv pip install -e .
+cd ..
+cd video_thumbnail_mcp
+uv pip install -e .
+cd ..
+
 nat workflow reinstall xiaohongshu_mcp
+nat workflow reinstall bilibili_mcp
+
 
 # 注册小红书 mcp服务
 nat mcp --config_file xiaohongshu_mcp/src/xiaohongshu_mcp/configs/config.yml \
