@@ -81,7 +81,7 @@
 ```mermaid
 graph TD
     subgraph "用户端 (User Side)"
-        User(👨‍💻 用户/创作者) --> Frontend[前端界面 (React UI)];
+        User("用户/创作者") --> Frontend[前端界面 (React UI)];
     end
 
     subgraph "应用后端 (Application Backend)"
@@ -101,12 +101,12 @@ graph TD
     end
 
     subgraph "外部依赖与服务 (External Dependencies & Services)"
-        Workflow -- "3a. 分析视频内容" --> AIModels((🤖 多模态大模型<br/>通义千问));
+        Workflow -- "3a. 分析视频内容" --> AIModels(("多模态大模型<br/>通义千问"));
         ThumbMCP -- "3b. AI美化封面" --> AIModels;
-        ThumbMCP -- "3c. 视频处理" --> CoreTools((🛠️ 核心库<br/>FFmpeg));
-        BiliMCP -- "3d. 平台交互" --> Platforms((🌐 社交媒体平台<br/>Bilibili));
-        BiliMCP -- "浏览器自动化" --> CoreTools2((<br/>Playwright));
-        XhsMCP -- "3e. 平台交互" --> Platforms2((<br/>小红书));
+        ThumbMCP -- "3c. 视频处理" --> CoreTools(("核心库<br/>FFmpeg"));
+        BiliMCP -- "3d. 平台交互" --> Platforms(("社交媒体平台<br/>Bilibili, 小红书"));
+        XhsMCP -- "3e. 平台交互" --> Platforms;
+        BiliMCP -- "浏览器自动化" --> CoreTools2(("浏览器自动化<br/>Playwright"));
         XhsMCP -- "浏览器自动化" --> CoreTools2;
     end
 
@@ -128,10 +128,8 @@ graph TD
     style ThumbMCP fill:#fff2e6,stroke:#ff9933,stroke-width:1.5px
     style AIModels fill:#d1e2f0,stroke:#4a7a9e,stroke-width:1.5px
     style Platforms fill:#f0d1e2,stroke:#9e4a7a,stroke-width:1.5px
-    style Platforms2 fill:#f0d1e2,stroke:#9e4a7a,stroke-width:1.5px
     style CoreTools fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
     style CoreTools2 fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
-
 ```
 
 
