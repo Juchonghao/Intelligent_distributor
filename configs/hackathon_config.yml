@@ -8,7 +8,6 @@ functions:
   tavily_search:
     _type: tavily_internet_search
     description: "使用Tavily API进行实时网络搜索"
-  
   current_datetime:
     _type: current_datetime
     description: "获取当前日期和时间"

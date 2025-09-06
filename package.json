@@ -1,0 +1,27 @@
+{
+  "name": "nemo-agent-toolkit",
+  "version": "1.0.0",
+  "description": "<!-- SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved. SPDX-License-Identifier: Apache-2.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Juchonghao/Intelligent_distributor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Juchonghao/Intelligent_distributor/issues"
+  },
+  "homepage": "https://github.com/Juchonghao/Intelligent_distributor#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.3.0"
+  }
+}

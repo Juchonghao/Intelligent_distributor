@@ -9,6 +9,8 @@ from nat.builder.function_info import FunctionInfo
 from nat.cli.register_workflow import register_function
 from nat.data_models.function import FunctionBaseConfig
 
+from typing import AsyncGenerator
+
 logger = logging.getLogger(__name__)
 
 class VideoAnalyzerConfig(FunctionBaseConfig, name="video_analyzer"):
@@ -33,8 +35,13 @@ async def analyze_video(config: VideoAnalyzerConfig, builder: Builder):
 
             prompt_text = (
                 "你是一位资深的社交媒体运营专家。请分析我上传的这个视频，从画面风格、视频节奏、"
-                "内容主题、时长、横竖屏等维度，判断它最适合发布在哪个平台。请从 B站、YouTube、"
-                "小红书、抖音 这四个选项中，给出你的推荐和详细理由，并以一个JSON对象格式输出结果，"
+                "内容主题、时长、横竖屏等维度，先选取最合适作为封面的时间戳，再生成一个可以用来增加曝光的标题（中英文两个版本），"
+                "最后判断它最适合发布在哪个平台。请从 B站、"
+                "小红书、抖音 这三个选项中，给出你的推荐和详细理由，并以一个JSON对象格式输出结果，"
+                "包含 'key_timestamp' 键，其值是一个时间戳，格式'HH:MM:SS.ms'，表示该时间戳最适合作为封面"
+                "包含 'title' 键，其值是一个字符串，表示对该视频的总结标题，吸引人，用来增加曝光度，少于15字"
+                "包含 'description' 键，对视频的描述"
+                "包含 'tags', 视频的标签"
                 "包含 'recommendations' 键，其值为一个列表，每个列表项包含 'platform', 'suitability' (从1到5的数字), 和 'reason' 三个键。"
             )
 

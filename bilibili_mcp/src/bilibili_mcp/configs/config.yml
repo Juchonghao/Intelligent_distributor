@@ -1,0 +1,27 @@
+# intelligent_distributor/configs/config.yml
+
+general:
+  use_uvloop: true
+
+functions:
+  # [重要] _type 必須使用完整的 "插件名/工具名" 格式
+  bilibili_login:
+    _type: bilibili_login
+  bilibili_upload_video:
+    _type: bilibili_upload_video
+llms:
+  nim_llm:
+    _type: openai
+    model_name: "qwen-plus"
+    api_key: "YOUR API KEY"
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    temperature: 0.7
+    max_tokens: 2048
+
+workflow:
+  _type: react_agent
+  tool_names: [bilibili_login, bilibili_upload_video]
+  llm_name: nim_llm
+  verbose: true
+  parse_agent_response_max_retries: 3
+
