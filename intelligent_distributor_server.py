@@ -10,6 +10,8 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
+
 
 from nat.builder.workflow_builder import WorkflowBuilder
 from nat.data_models.config import Config
@@ -174,6 +176,56 @@ async def upload_to_platform_endpoint(
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             os.unlink(temp_file_path)
+
+@app.post("/api/generate_thumbnail")
+async def generate_video_thumbnail(
+    request: Request,
+    video: UploadFile = File(...),
+    timestamp: str = Form(...),
+    title: Optional[str] = Form(None),
+    language: Optional[str] = Form('zh')
+):
+    builder = request.app.state.builder
+    if not builder:
+        raise HTTPException(status_code=500, detail="AI代理未能初始化。")
+
+    tool_name = "video_thumbnail_generation"
+    print(f"准备调用工具: {tool_name}")
+
+    temp_file_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(video.filename)[1]) as tmp_file:
+            shutil.copyfileobj(video.file, tmp_file)
+            temp_file_path = tmp_file.name
+
+        thumbnail_tool = builder.get_function(tool_name)
+        input_args = {
+            "video_path": temp_file_path,
+            "timestamp": timestamp,
+            "title": title,
+            "language": language
+        }
+
+        print(f"调用工具 '{tool_name}'，参数: {input_args}")
+        new_video_path = await thumbnail_tool.ainvoke(input_args)
+        print(f"工具 '{tool_name}' 返回结果: {new_video_path}")
+
+        if not os.path.exists(new_video_path):
+            raise HTTPException(status_code=500, detail="工具执行成功，但未能找到生成的视频文件。")
+
+        # [重要修改] 返回文件本身，而不是 JSON
+        # 这允许前端直接接收和预览新视频
+        return FileResponse(
+            path=new_video_path,
+            media_type='video/mp4',
+            filename=os.path.basename(new_video_path)
+            # 注意：这里我们不再删除临时文件，因为需要将它发送出去。
+            # 在生产环境中需要一个独立的任务来清理这些文件。
+        )
+
+    except Exception as e:
+        print(f"生成封面时发生错误: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"生成封面失败: {str(e)}")
 
 @app.get("/")
 def read_root():

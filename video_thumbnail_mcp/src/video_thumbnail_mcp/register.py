@@ -62,13 +62,15 @@ def extract_frame_at_timestamp(video_path, timestamp, output_path):
         (
             ffmpeg
             .input(video_path, ss=timestamp)
-            .output(output_path, vframes=1, q=':v 2')
+            # [修正] 将 q=':v 2' 修改为正确的 qscale=2 参数
+            .output(output_path, vframes=1, qscale=2)
             .overwrite_output()
             .run(capture_stdout=True, capture_stderr=True)
         )
         logger.info(f"成功在 {timestamp} 提取幀，並儲存為 {output_path}")
     except ffmpeg.Error as e:
-        logger.error(f"FFmpeg 提取幀時出錯:{e.stderr.decode()}")
+        # 打印更详细的FFmpeg错误日志，方便调试
+        logger.error(f"FFmpeg 提取幀時出錯:\nSTDOUT:\n{e.stdout.decode()}\nSTDERR:\n{e.stderr.decode()}")
 
 def get_video_resolution(video_path: str) -> tuple[int, int] | None:
     """使用 ffprobe 自動偵測影片的寬和高。"""
@@ -269,30 +271,32 @@ def en_ai_process_video_thumbnail(img_path: str, prompt: str, model_name: str) -
 async def video_thumbnail_generation(tool_config: VideoThumbnailConfig, builder: Builder):
     async def _video_thumbnail_generation(video_path: str, timestamp: str, title: str = None, language: str = 'zh') -> str:
 
+        print("\n[DEBUG] --- 1. 进入 video_thumbnail_generation 工具 ---")
+        print(f"[DEBUG] 视频路径: {video_path}, 时间戳: {timestamp}, 标题: {title}")
+
         base_output_path = f"{tool_config.save_path}_{int(time.time())}"
         keyframe_path = f"{base_output_path}_keyframe.png"
 
         # --- 步驟 2: 提取關鍵幀 ---
+        print(f"[DEBUG] --- 2. 准备提取关键帧到: {keyframe_path} ---")
         extract_frame_at_timestamp(video_path, timestamp, keyframe_path)
 
         if not os.path.exists(keyframe_path):
             logger.error(f"關鍵幀提取失敗，無法找到檔案：{keyframe_path}。返回原始影片路徑。")
+            print("[DEBUG] --- 关键帧提取失败，提前退出 ---")
             return video_path
+
+        print("[DEBUG] --- 关键帧提取成功 ---")
 
         # --- 步驟 3: 檢查標題，決定是否需要呼叫 AI ---
         if not title:
             logger.info("標題為空，無需 AI 處理。準備直接使用提取的關鍵幀作為封面。")
             ai_processed_cover_path = keyframe_path
-
         else:
             # --- 步驟 4: 如果有標題，則呼叫 AI 進行封面生成 ---
             logger.info(f"標題為 '{title}'，語言為 '{language}'，準備呼叫 AI 進行封面改造...")
-
-            # 優化後的 Prompt，只傳送一張圖
-            prompt_text = f"""
-                        你是一位顶尖的封面设计师。请使用我提供的这张图片作为基础，将以下文字标题创意地、清晰地融入画面中，生成一张吸引人的视频封面。
-                        要嵌入的标题是: "{title}"
-                        """
+            print("[DEBUG] --- 4. 准备调用 AI 模型 ---")
+            prompt_text = f'你是一位顶尖的封面设计师。请使用我提供的这张图片作为基础，将以下文字标题创意地、清晰地融入画面中，生成一张吸引人的视频封面。\n要嵌入的标题是: "{title}"'
 
             ai_process_success = False
             if language.lower() == 'zh':
@@ -302,7 +306,6 @@ async def video_thumbnail_generation(tool_config: VideoThumbnailConfig, builder:
                     model_name=tool_config.zh_image_edit_model
                 )
             elif language.lower() == 'en':
-                # 在 en_ai_process_video_thumbnail 函式內部加入偵錯 print
                 ai_process_success = en_ai_process_video_thumbnail(
                     img_path=keyframe_path,
                     prompt=prompt_text,
@@ -311,9 +314,11 @@ async def video_thumbnail_generation(tool_config: VideoThumbnailConfig, builder:
             else:
                 logger.warning(f"未知的語言類型 '{language}'，將不會呼叫 AI。")
 
+            print(f"[DEBUG] AI 处理是否成功: {ai_process_success}")
+
             if ai_process_success:
                 logger.info("AI 封面改造成功。")
-                ai_processed_cover_path = keyframe_path  # 圖片被原地修改
+                ai_processed_cover_path = keyframe_path
             else:
                 logger.warning("AI 封面改造失敗，將使用原始提取的關鍵幀。")
                 ai_processed_cover_path = keyframe_path
@@ -323,16 +328,26 @@ async def video_thumbnail_generation(tool_config: VideoThumbnailConfig, builder:
         file_root, file_ext = os.path.splitext(video_path)
         new_video_path = f"{file_root}_ai{file_ext}"
 
+        print(f"[DEBUG] --- 5. 准备调用 add_cover_to_video ---")
+        print(f"[DEBUG]     封面路径: {ai_processed_cover_path}")
+        print(f"[DEBUG]     原视频路径: {video_path}")
+        print(f"[DEBUG]     新视频路径: {new_video_path}")
+
         add_cover_success = add_cover_to_video(ai_processed_cover_path, video_path, new_video_path)
+
+        print(f"[DEBUG] --- add_cover_to_video 函数执行完毕，返回结果: {add_cover_success} ---")
 
         if add_cover_success:
             logger.info(f"影片合成成功，返回新影片路徑: {new_video_path}")
+            print(f"[DEBUG] --- 最终返回新视频路径: {new_video_path} ---")
             return new_video_path
         else:
             logger.error("影片合成失敗，返回原始影片路徑。")
+            print(f"[DEBUG] --- 最终返回原始视频路径: {video_path} ---")
             return video_path
 
     yield FunctionInfo.from_fn(
         _video_thumbnail_generation,
         description=("这是视频封面生成和改造工具，返回新生成的视频路径（如果处理失败，则返回原路径）"
                      "该工具需要输入视频路径信息、封面所在的时间戳，以及需要在封面上添加的文字信息和文字语言类型（可选）"))
+

@@ -67,8 +67,15 @@ cd video_thumbnail_mcp
 uv pip install -e .
 cd ..
 
+# 注册视频封面处理工具
+# 需要先安装ffmpeg
+macOS: 使用 Homebrew: brew install ffmpeg
+Linux (Ubuntu/Debian): sudo apt update && sudo apt install ffmpeg
+uv pip install ffmpeg-python
+
 nat workflow reinstall xiaohongshu_mcp
 nat workflow reinstall bilibili_mcp
+nat workflow reinstall video_thumbnail_generation
 
 
 # 注册小红书 mcp服务
@@ -86,11 +93,6 @@ nat mcp --config_file bilibili_mcp/src/bilibili_mcp/configs/config.yml \
   --name "My MCP Server"\
   --tool_names bilibili_login \
   --tool_names bilibili_upload_video  
-
-# 注册视频封面处理工具
-# 需要先安装ffmpeg
-macOS: 使用 Homebrew: brew install ffmpeg
-Linux (Ubuntu/Debian): sudo apt update && sudo apt install ffmpeg
 
 nat mcp --config_file video_thumbnail_mcp/src/video_thumbnail_mcp/configs/config.yml \
   --host 0.0.0.0 \
