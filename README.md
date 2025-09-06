@@ -81,39 +81,39 @@
 ```mermaid
 graph TD
     subgraph "用户端 (User Side)"
-        User("用户/创作者") --> Frontend[前端界面 (React UI)];
+        User("用户/创作者") --> Frontend[前端界面 (React UI)]
     end
 
     subgraph "应用后端 (Application Backend)"
-        Frontend -- "1. 上传视频/发起任务<br/>(Analyze, Login, Upload...)" --> MainBackend[主后端服务器 (FastAPI)];
-        MainBackend -- "2. 调用工作流/工具" --> NeMoToolkit;
+        Frontend -- "1. 上传视频/发起任务<br/>(Analyze, Login, Upload...)" --> MainBackend[主后端服务器 (FastAPI)]
+        MainBackend -- "2. 调用工作流/工具" --> NeMoToolkit
     end
 
     subgraph "NVIDIA NeMo Agent Toolkit"
-        NeMoToolkit --> Workflow[智能分发工作流<br/>intelligent_distributor];
-        NeMoToolkit --> MCP{NVIDIA MCP<br/>(工具控制平面)};
+        NeMoToolkit --> Workflow[智能分发工作流<br/>intelligent_distributor]
+        NeMoToolkit --> MCP{NVIDIA MCP<br/>(工具控制平面)}
     end
 
     subgraph "MCP 微服务工具集 (Microservice Tools)"
-        MCP -- "路由请求" --> BiliMCP[Bilibili 工具<br/>(登录/上传)];
-        MCP -- "路由请求" --> XhsMCP[小红书 工具<br/>(登录/上传)];
-        MCP -- "路由请求" --> ThumbMCP[封面生成工具<br/>(提取/美化/合成)];
+        MCP -- "路由请求" --> BiliMCP[Bilibili 工具<br/>(登录/上传)]
+        MCP -- "路由请求" --> XhsMCP[小红书 工具<br/>(登录/上传)]
+        MCP -- "路由请求" --> ThumbMCP[封面生成工具<br/>(提取/美化/合成)]
     end
 
     subgraph "外部依赖与服务 (External Dependencies & Services)"
-        Workflow -- "3a. 分析视频内容" --> AIModels(("多模态大模型<br/>通义千问"));
-        ThumbMCP -- "3b. AI美化封面" --> AIModels;
-        ThumbMCP -- "3c. 视频处理" --> CoreTools(("核心库<br/>FFmpeg"));
-        BiliMCP -- "3d. 平台交互" --> Platforms(("社交媒体平台<br/>Bilibili, 小红书"));
-        XhsMCP -- "3e. 平台交互" --> Platforms;
-        BiliMCP -- "浏览器自动化" --> CoreTools2(("浏览器自动化<br/>Playwright"));
-        XhsMCP -- "浏览器自动化" --> CoreTools2;
+        Workflow -- "3a. 分析视频内容" --> AIModels(("多模态大模型<br/>通义千问"))
+        ThumbMCP -- "3b. AI美化封面" --> AIModels
+        ThumbMCP -- "3c. 视频处理" --> CoreTools(("核心库<br/>FFmpeg"))
+        BiliMCP -- "3d. 平台交互" --> Platforms(("社交媒体平台<br/>Bilibili, 小红书"))
+        XhsMCP -- "3e. 平台交互" --> Platforms
+        BiliMCP -- "浏览器自动化" --> CoreTools2(("浏览器自动化<br/>Playwright"))
+        XhsMCP -- "浏览器自动化" --> CoreTools2
     end
 
     subgraph "结果返回 (Result Flow)"
-        NeMoToolkit -- "4. 返回处理结果" --> MainBackend;
-        MainBackend -- "5. 响应前端" --> Frontend;
-        Frontend -- "6. 展示结果/新视频" --> User;
+        NeMoToolkit -- "4. 返回处理结果" --> MainBackend
+        MainBackend -- "5. 响应前端" --> Frontend
+        Frontend -- "6. 展示结果/新视频" --> User
     end
 
     %% --- Styling ---
@@ -130,6 +130,7 @@ graph TD
     style Platforms fill:#f0d1e2,stroke:#9e4a7a,stroke-width:1.5px
     style CoreTools fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
     style CoreTools2 fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
+
 ```
 
 
