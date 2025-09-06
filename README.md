@@ -80,57 +80,48 @@
 
 ```mermaid
 graph TD
-    subgraph UserSide["用户端 (User Side)"]
-        User("用户/创作者") --> Frontend[前端界面 (React UI)]
+    A[用户/创作者] --> B[前端界面 React UI]
+    B --> C[主后端服务器 FastAPI]
+    C --> D[NVIDIA NeMo Agent Toolkit]
+    
+    subgraph D
+        D1[智能分发工作流 intelligent_distributor]
+        D2{NVIDIA MCP 工具控制平面}
     end
+    
+    D2 --> E[Bilibili工具 登录/上传]
+    D2 --> F[小红书工具 登录/上传]
+    D2 --> G[封面生成工具 提取/美化/合成]
+    
+    D1 --> H[多模态大模型 通义千问]
+    G --> H
+    G --> I[核心库 FFmpeg]
+    
+    E --> J[社交媒体平台 Bilibili]
+    F --> K[社交媒体平台 小红书]
+    E --> L[浏览器自动化 Playwright]
+    F --> L
+    
+    J --> C
+    K --> C
+    L --> C
+    H --> C
+    I --> C
 
-    subgraph AppBackend["应用后端 (Application Backend)"]
-        Frontend -- "1. 上传视频/发起任务<br/>(Analyze, Login, Upload...)" --> MainBackend[主后端服务器 (FastAPI)]
-        MainBackend -- "2. 调用工作流/工具" --> NeMoToolkit
-    end
-
-    subgraph NeMoToolkit["NVIDIA NeMo Agent Toolkit"]
-        NeMoToolkit --> Workflow[智能分发工作流<br/>intelligent_distributor]
-        NeMoToolkit --> MCP{NVIDIA MCP<br/>(工具控制平面)}
-    end
-
-    subgraph MCPServices["MCP 微服务工具集 (Microservice Tools)"]
-        MCP -- "路由请求" --> BiliMCP[Bilibili 工具<br/>(登录/上传)]
-        MCP -- "路由请求" --> XhsMCP[小红书 工具<br/>(登录/上传)]
-        MCP -- "路由请求" --> ThumbMCP[封面生成工具<br/>(提取/美化/合成)]
-    end
-
-    subgraph ExternalServices["外部依赖与服务 (External Dependencies & Services)"]
-        Workflow -- "3a. 分析视频内容" --> AIModels(("多模态大模型<br/>通义千问"))
-        ThumbMCP -- "3b. AI美化封面" --> AIModels
-        ThumbMCP -- "3c. 视频处理" --> CoreTools(("核心库<br/>FFmpeg"))
-        BiliMCP -- "3d. 平台交互" --> Platforms(("社交媒体平台<br/>Bilibili, 小红书"))
-        XhsMCP -- "3e. 平台交互" --> Platforms
-        BiliMCP -- "浏览器自动化" --> CoreTools2(("浏览器自动化<br/>Playwright"))
-        XhsMCP -- "浏览器自动化" --> CoreTools2
-    end
-
-    subgraph ResultFlow["结果返回 (Result Flow)"]
-        NeMoToolkit -- "4. 返回处理结果" --> MainBackend
-        MainBackend -- "5. 响应前端" --> Frontend
-        Frontend -- "6. 展示结果/新视频" --> User
-    end
-
-    %% --- Styling ---
-    style User fill:#cde4ff,stroke:#6699ff,stroke-width:2px
-    style Frontend fill:#d5f5e3,stroke:#58d68d,stroke-width:2px
-    style MainBackend fill:#fdebd0,stroke:#f5b041,stroke-width:2px
-    style NeMoToolkit fill:#ebdef0,stroke:#a569bd,stroke-width:4px,stroke-dasharray: 5 5
-    style Workflow fill:#e8daef,stroke:#a569bd,stroke-width:2px
-    style MCP fill:#e8daef,stroke:#a569bd,stroke-width:2px,shape:diamond
-    style BiliMCP fill:#e6f2ff,stroke:#3399ff,stroke-width:1.5px
-    style XhsMCP fill:#ffe6e6,stroke:#ff4d4d,stroke-width:1.5px
-    style ThumbMCP fill:#fff2e6,stroke:#ff9933,stroke-width:1.5px
-    style AIModels fill:#d1e2f0,stroke:#4a7a9e,stroke-width:1.5px
-    style Platforms fill:#f0d1e2,stroke:#9e4a7a,stroke-width:1.5px
-    style CoreTools fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
-    style CoreTools2 fill:#e2f0d1,stroke:#7a9e4a,stroke-width:1.5px
-
+    style A fill:#e1f5fe,stroke:#039be5,stroke-width:2px
+    style B fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
+    style C fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
+    style D fill:#fff3e0,stroke:#ff9800,stroke-width:2px
+    style D1 fill:#ffecb3,stroke:#ffa000,stroke-width:1.5px
+    style D2 fill:#ffecb3,stroke:#ffa000,stroke-width:1.5px
+    style E fill:#e8eaf6,stroke:#3f51b5,stroke-width:1.5px
+    style F fill:#e8eaf6,stroke:#3f51b5,stroke-width:1.5px
+    style G fill:#fce4ec,stroke:#e91e63,stroke-width:1.5px
+    style H fill:#e0f2f1,stroke:#009688,stroke-width:1.5px
+    style I fill:#fff9c4,stroke:#ffeb3b,stroke-width:1.5px
+    style J fill:#bbdefb,stroke:#2196f3,stroke-width:1.5px
+    style K fill:#bbdefb,stroke:#2196f3,stroke-width:1.5px
+    style L fill:#c8e6c9,stroke:#4caf50,stroke-width:1.5px
 ```
 
 
