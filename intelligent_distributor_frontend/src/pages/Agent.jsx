@@ -231,7 +231,7 @@ function App() {
                   >
                     <div className="flex flex-col items-center pointer-events-none">
                       <UploadIcon />
-                      <p className="mt-4 text-lg">拖拽视频文件到这里，或 <span className="font-semibold text-indigo-400">点击选择</span></p>
+                      <p className="mt-4 text-lg text-indigo-200">拖拽视频文件到这里，或 <span className="font-semibold text-indigo-400">点击选择</span></p>
                       <p className="text-sm text-gray-500 mt-1">支持 MP4, MOV 等格式</p>
                       <input type="file" className="hidden" accept="video/*" ref={uploadInputRef} onChange={(e) => handleFileAnalysis(e.target.files[0])} />
                     </div>
