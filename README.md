@@ -79,49 +79,43 @@
 本系统采用前后端分离的微服务架构，其核心交互流程如下：
 
 ```mermaid
-graph TD
-    A[用户/创作者] --> B[前端界面 React UI]
-    B --> C[主后端服务器 FastAPI]
-    C --> D[NVIDIA NeMo Agent Toolkit]
+flowchart TD
+    A[👥 用户上传视频] --> B[前端接收请求]
+    B --> C[FastAPI后端处理]
+    C --> D[NVIDIA NeMo智能分发]
     
-    subgraph D
-        D1[智能分发工作流 intelligent_distributor]
-        D2{NVIDIA MCP 工具控制平面}
+    subgraph D[智能处理核心]
+        D1[📊 内容分析]
+        D2[🔧 平台匹配决策]
+        D3[🔄 MCP工具调度]
     end
     
-    D2 --> E[Bilibili工具 登录/上传]
-    D2 --> F[小红书工具 登录/上传]
-    D2 --> G[封面生成工具 提取/美化/合成]
+    D3 --> E[B站工具服务]
+    D3 --> F[小红书工具服务]
+    D3 --> G[封面生成工具]
     
-    D1 --> H[多模态大模型 通义千问]
-    G --> H
-    G --> I[核心库 FFmpeg]
+    E --> H[📱 平台登录认证]
+    F --> H
+    E --> I[📤 视频上传执行]
+    F --> I
     
-    E --> J[社交媒体平台 Bilibili]
-    F --> K[社交媒体平台 小红书]
-    E --> L[浏览器自动化 Playwright]
-    F --> L
+    G --> J[🎬 视频预处理]
+    G --> K[🎨 智能封面生成]
     
-    J --> C
-    K --> C
-    L --> C
-    H --> C
-    I --> C
-
-    style A fill:#e1f5fe,stroke:#039be5,stroke-width:2px
-    style B fill:#f3e5f5,stroke:#9c27b0,stroke-width:2px
-    style C fill:#e8f5e8,stroke:#4caf50,stroke-width:2px
-    style D fill:#fff3e0,stroke:#ff9800,stroke-width:2px
-    style D1 fill:#ffecb3,stroke:#ffa000,stroke-width:1.5px
-    style D2 fill:#ffecb3,stroke:#ffa000,stroke-width:1.5px
-    style E fill:#e8eaf6,stroke:#3f51b5,stroke-width:1.5px
-    style F fill:#e8eaf6,stroke:#3f51b5,stroke-width:1.5px
-    style G fill:#fce4ec,stroke:#e91e63,stroke-width:1.5px
-    style H fill:#e0f2f1,stroke:#009688,stroke-width:1.5px
-    style I fill:#fff9c4,stroke:#ffeb3b,stroke-width:1.5px
-    style J fill:#bbdefb,stroke:#2196f3,stroke-width:1.5px
-    style K fill:#bbdefb,stroke:#2196f3,stroke-width:1.5px
-    style L fill:#c8e6c9,stroke:#4caf50,stroke-width:1.5px
+    J --> L[✓ 格式转换]
+    J --> M[✓ 质量优化]
+    
+    K --> N[✓ 帧提取]
+    K --> O[✓ AI美化]
+    K --> P[✓ 文字合成]
+    
+    H --> Q[✅ 登录状态验证]
+    I --> R[✅ 上传接口调用]
+    
+    Q --> S[🎉 上传成功]
+    R --> S
+    
+    S --> T[📋 结果返回用户]
 ```
 
 
